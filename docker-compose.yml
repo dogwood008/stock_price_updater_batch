@@ -1,0 +1,47 @@
+version: '3.9'
+services:
+  init:
+    build:
+      context: ./initial_sync
+      args:
+        WEBDAV_SERVER_ADDRESS: ${WEBDAV_SERVER_ADDRESS}
+        KABU_PLUS_ID: ${KABU_PLUS_ID}
+        KABU_PLUS_PW: ${KABU_PLUS_PW}
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse
+    environment:
+      - WEBDAV_SERVER_ADDRESS=${WEBDAV_SERVER_ADDRESS}
+      - KABU_PLUS_ID=${KABU_PLUS_ID}
+      - KABU_PLUS_PW=${KABU_PLUS_PW}
+      - DIST=${DIST}
+    volumes: 
+      - ./csv:/opt/csv:delegated
+      - ./initial_sync:/opt/sync
+
+  daily:
+    build:
+      context: ./daily_sync
+      args:
+        WEBDAV_SERVER_ADDRESS: ${WEBDAV_SERVER_ADDRESS}
+        KABU_PLUS_ID: ${KABU_PLUS_ID}
+        KABU_PLUS_PW: ${KABU_PLUS_PW}
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse
+    environment:
+      - WEBDAV_SERVER_ADDRESS=${WEBDAV_SERVER_ADDRESS}
+      - KABU_PLUS_ID=${KABU_PLUS_ID}
+      - KABU_PLUS_PW=${KABU_PLUS_PW}
+      - DIST=${DIST}
+      - OUTPUT_PATH=./current
+    volumes: 
+      - ./csv:/opt/csv:delegated
+      - ./daily_sync/main.py:/opt/sync/main.py
+      - ./daily_sync/current:/opt/sync/current:delegated
