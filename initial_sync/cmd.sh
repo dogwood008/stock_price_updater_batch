@@ -20,3 +20,4 @@ rsync \
   ${DIST}
 
 rm /var/run/mount.davfs/mnt-kabuplus.pid
+time python main.py

@@ -14,13 +14,14 @@ ENV DIST ${DIST}
 
 RUN mkdir -p /opt/sync
 WORKDIR /opt/sync
-COPY ./main.py /opt/sync/
-COPY ./__init__.py /opt/sync/
 COPY ./Pipfile /opt/sync/
 COPY ./Pipfile.lock /opt/sync/
 
 RUN pip install --upgrade pip && \
     pip install pipenv && \
     pipenv install --deploy --system --ignore-pipfile --python=$(which python) --site-packages
+
+COPY ./main.py /opt/sync/
+COPY ./__init__.py /opt/sync/
 
 CMD python /opt/sync/main.py

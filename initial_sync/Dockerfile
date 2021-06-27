@@ -12,7 +12,7 @@ ENV KABU_PLUS_ID ${KABU_PLUS_ID}
 ENV KABU_PLUS_PW ${KABU_PLUS_PW}
 ENV DIST ${DIST}
 ENV WORKDIR /opt/sync
-WORKDIR ${WORKDIR}}
+WORKDIR ${WORKDIR}
 
 RUN apt update
 RUN apt install -y davfs2 rsync
@@ -25,10 +25,6 @@ RUN chown root:root /etc/davfs2/secrets
 RUN echo "${WEBDAV_SERVER_ADDRESS} ${MOUNTPOINT} davfs user,noauto 0 0" >> /etc/fstab
 RUN mkdir -p ${MOUNTPOINT}
 
-ENV DRYRUN=''
-
-COPY ./main.py /opt/sync/
-COPY ./__init__.py /opt/sync/
 COPY ./Pipfile /opt/sync/
 COPY ./Pipfile.lock /opt/sync/
 
@@ -37,5 +33,8 @@ RUN pip install --upgrade pip && \
     pip install pipenv && \
     pipenv install --deploy --system --ignore-pipfile --python=$(which python) --site-packages
 
+ENV DRYRUN='--dry-run'
+COPY ./main.py /opt/sync/
+COPY ./__init__.py /opt/sync/
 COPY cmd.sh /opt/cmd.sh
-#CMD mount ${MOUNTPOINT} && /bin/bash /opt/cmd.sh
+CMD mount ${MOUNTPOINT} && /bin/bash /opt/cmd.sh

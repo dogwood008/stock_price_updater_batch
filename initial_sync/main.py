@@ -1,18 +1,20 @@
 from sqlite3.dbapi2 import SQLITE_DROP_TABLE
 import pandas as pd
 import sqlite3
+from sqlite3 import Connection
 import contextlib
-import datetime
+import glob
 
-file_path = '/opt/csv/japan-all-stock-prices.csv'
+file_path = '/opt/csv/*.csv'
 SQLITE_DB_PATH = '/opt/csv/stocks.db'
+TABLE_NAME = 'stocks'
 
 dtype = {
-    'SC': str,
-    '名称': str,
-    '市場': str,
-    '業種': str,
-    '日付': str,
+    'SC': 'string',
+    '名称': 'string',
+    '市場': 'string',
+    '業種': 'string',
+    '日付': 'string',
     '株価': float,
     '前日比': float,
     '前日比（％）': float,
@@ -27,9 +29,31 @@ dtype = {
     '値幅上限': float,
 }
 
-df = pd.read_csv(file_path, encoding='sjis').replace('-', 0).astype(dtype)
-df['日付'] = pd.to_datetime(df['日付'] + 'T15:00:00', format='%Y%m%dT%H:%M:%S')
-
-with contextlib.closing(sqlite3.connect(SQLITE_DB_PATH)) as con:
+def insert(con: Connection):
+    files = glob.glob(file_path)
     with con as cur:
-        df.to_sql('stocks', cur, if_exists='replace', index=False)
+        for i, file in enumerate(files):
+            print(f'processing... %5d / %5d {file}' % (i, len(files)))
+            df = pd.read_csv(file, encoding='sjis').replace('-', 0)
+            if '日時' in df.columns:
+                # old type
+                df['日時'] = df['日時'].replace(0, '2000/1/1 00:00')
+                df['日付'] = pd.to_datetime(df['日時'].astype(str), format='%Y/%m/%d %H:%M')
+                df = df.drop(columns='日時')
+            else:
+                df['日付'] = pd.to_datetime(df['日付'].astype(str) + 'T15:00:00', format='%Y%m%dT%H:%M:%S')
+            df = df.astype(dtype)
+            df.index = df[['SC', '日付']]
+            df.to_sql(TABLE_NAME, cur, if_exists='append', index=False)
+    
+def set_index(con: Connection):
+    create_index = f'CREATE INDEX index_sc_date ON {TABLE_NAME}(`SC`, `日付`)'
+    with con as cur:
+        cur.execute(create_index)
+
+def main():
+    with contextlib.closing(sqlite3.connect(SQLITE_DB_PATH)) as con:
+        insert(con)
+        set_index(con)
+
+main()

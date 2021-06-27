@@ -1,6 +1,8 @@
 version: '3.9'
 services:
   init:
+    tty: true
+    stdin_open: true
     build:
       context: ./initial_sync
       args:
@@ -23,6 +25,8 @@ services:
       - ./initial_sync:/opt/sync
 
   daily:
+    tty: true
+    stdin_open: true
     build:
       context: ./daily_sync
       args:
@@ -43,5 +47,4 @@ services:
       - OUTPUT_PATH=./current
     volumes: 
       - ./csv:/opt/csv:delegated
-      - ./daily_sync/main.py:/opt/sync/main.py
       - ./daily_sync/current:/opt/sync/current:delegated
