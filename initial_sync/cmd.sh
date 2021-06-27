@@ -9,6 +9,7 @@ echo dry-run: ${DRYRUN}
 
 rm /var/run/mount.davfs/mnt-kabuplus.pid
 
+# DON'T RUN OVER THE THRESHOLD LIMIT!
 rsync \
   ${DRYRUN} \
   --archive \
